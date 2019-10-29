@@ -13,18 +13,26 @@ class NaiveBayes(object):
 
     def evaluate(self):
         hits = 0
+        matrix = [[0, 0, 0],
+                  [0, 0, 0],
+                  [0, 0, 0]]
         for data in self.test:
-            predict, prob = self.predictSentence(data[2])
+            predict, prob = self.predictPhrase(data[2])
             hits = hits + 1 if (int(predict) == int(data[3])) else hits
-        print('Acertou {0} de {1}'.format(hits, len(self.test)))
+            matrix[int(data[3])-1][int(predict)-1] += 1 
+        percent = hits / len(self.test) * 100
+        print('Acertou {0} de {1} -> Acurácia de {2}%'.format(hits, len(self.test), round(percent, 2)))
+        print(matrix[0])
+        print(matrix[1])
+        print(matrix[2])
 
 
-    def predictSentence(self, sentence):
-        probabilitys = [self.probabilityOfSentence(sentence, i) for i in ['1', '2', '3']]
+    def predictPhrase(self, sentence):
+        probabilitys = [self.probabilityOfPhrase(sentence, i) for i in ['1', '2', '3']]
         maxValue = np.max(probabilitys)
         return probabilitys.index(maxValue) + 1, maxValue
 
-    def probabilityOfSentence(self, sentence, classs):
+    def probabilityOfPhrase(self, sentence, classs):
         total = 0
         for word in sentence.split():
             total = total + self.probabilityOfWord(word, classs)
@@ -34,7 +42,7 @@ class NaiveBayes(object):
         total = 0
         for key, value in self.countObject[classs].items():
             total = total + float(value) if (word in key) else total
-        return float(total) / float(self.wordsObject[classs]['count'])
+        return (float(total) + 1) / (float(self.wordsObject[classs]['count']) + self.totalUniqueWords)
 
     @staticmethod
     def splitWords(dataSet):
